@@ -1,5 +1,6 @@
 package core.network.protocol;
 
+import core.quorum.QuorumPeer;
 import io.netty.handler.codec.MessageToByteEncoder;
 
 /**
@@ -13,6 +14,7 @@ public class Notification implements Message {
     long sid;
     long proposedLeader;
     long epoch;
+    QuorumPeer.ServerState state;
 
     ZXID zxid;
 
@@ -32,5 +34,57 @@ public class Notification implements Message {
     @Override
     public long getDestSid() {
         return sid;
+    }
+
+    public static long getSerialVersionUID() {
+        return serialVersionUID;
+    }
+
+    public long getMsgId() {
+        return msgId;
+    }
+
+    public void setMsgId(long msgId) {
+        this.msgId = msgId;
+    }
+
+    public long getSid() {
+        return sid;
+    }
+
+    public void setSid(long sid) {
+        this.sid = sid;
+    }
+
+    public long getProposedLeader() {
+        return proposedLeader;
+    }
+
+    public void setProposedLeader(long proposedLeader) {
+        this.proposedLeader = proposedLeader;
+    }
+
+    public long getEpoch() {
+        return epoch;
+    }
+
+    public void setEpoch(long epoch) {
+        this.epoch = epoch;
+    }
+
+    public QuorumPeer.ServerState getState() {
+        return state;
+    }
+
+    public void setState(QuorumPeer.ServerState state) {
+        this.state = state;
+    }
+
+    public ZXID getZxid() {
+        return zxid;
+    }
+
+    public void setZxid(ZXID zxid) {
+        this.zxid = zxid;
     }
 }

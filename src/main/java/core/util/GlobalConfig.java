@@ -10,4 +10,8 @@ import jdk.nashorn.internal.objects.Global;
 public class GlobalConfig {
     public static Config getConfig = ConfigFactory.load();
 
+    public static Config getConfig(String configPath)  {
+        return ConfigFactory.load(configPath);
+    }
+
 }

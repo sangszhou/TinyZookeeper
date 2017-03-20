@@ -28,24 +28,27 @@ public class QuorumCnxManager {
     public LinkedBlockingQueue<Message> recvMsg = new LinkedBlockingQueue<>();
     ConcurrentHashMap<Long, RpcClientHandler> clientHandler = new ConcurrentHashMap<>();
     ;
-    LeaderElectionConfig leaderElectionConfig = new LeaderElectionConfig();
+    LeaderElectionConfig leaderElectionConfig;
 
     private static ExecutorService threadPoolExecutor = Executors.newFixedThreadPool(4);
+
+    ConcurrentHashMap<Long, LinkedBlockingQueue<Message>> toSentMessages = new ConcurrentHashMap<>();
+
     EventLoopGroup group = new NioEventLoopGroup(4);
 
+    public QuorumCnxManager(LeaderElectionConfig leaderElectionConfig) {
+        this.leaderElectionConfig = leaderElectionConfig;
+    }
 
     public void init() throws Exception {
-
-        leaderElectionConfig.load(GlobalConfig.getConfig);
+//        leaderElectionConfig.load(GlobalConfig.getConfig);
         initServer();
         // wait how long?
         connectAllServers(leaderElectionConfig.getAllSids());
     }
 
     // client connection
-
     public void connectAllServers(List<Long> sids) {
-
         sids.forEach(sid -> {
             if (sid != leaderElectionConfig.getSelfInfo().getSid())
                 connectServer(sid);
@@ -74,31 +77,58 @@ public class QuorumCnxManager {
             channelFuture.addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
-
                     if (future.isSuccess()) {
                         log.info("connected to server sid: " + sid);
                         RpcClientHandler handler = channelFuture.channel().pipeline().get(RpcClientHandler.class);
                         clientHandler.put(sid, handler);
+                        // start send thread for this connection
                     } else {
                         long backoffTime = 3000;
                         Thread.sleep(3000);
                         connectServer(sid);
-
                         log.error("connect to server failed, retry after 1000 second");
                     }
-
-
                 }
             });
         });
     }
 
+    // @todo need add queue, in case the dest server is not online
+    // queue can maintain sending list
     public void send(long sid, Message msg) throws Exception {
         if (clientHandler.get(sid) == null) {
+            log.error("failed to send message to " + sid + ", because the connection is not ready");
             throw new Exception("cannot send message to sid " + sid + ", client connection not established");
         }
-        clientHandler.get(sid).send(msg);
+
+        toSentMessages.getOrDefault(sid, new LinkedBlockingQueue<>()).add(msg);
     }
+
+    class sendWorker implements Runnable {
+
+        Channel clientChannel;
+        LinkedBlockingQueue<Message> queue;
+
+        public sendWorker(Channel clientChannel, LinkedBlockingQueue<Message> queue) {
+            this.clientChannel = clientChannel;
+            this.queue = queue;
+        }
+
+
+        @Override
+        public void run() {
+            while (true) {
+                Message newMsg = queue.peek();
+                if (newMsg != null) {
+                    clientHandler.get(newMsg.getDestSid()).send(newMsg);
+                    queue.poll(); // actually send the message successfully
+                } else {
+                    log.error("failed to get message from queue");
+                }
+            }
+        }
+    }
+
 
     // server establish
     private void initServer() throws Exception {

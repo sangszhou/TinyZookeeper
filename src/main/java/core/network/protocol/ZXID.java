@@ -40,4 +40,8 @@ public class ZXID implements Serializable, Comparable<ZXID> {
         }
         return Math.toIntExact(counter - o.counter);
     }
+
+    public ZXID getNextZXID() {
+        return new ZXID(counter + 1, epoch);
+    }
 }
