@@ -7,15 +7,16 @@ import io.netty.handler.codec.MessageToByteEncoder;
  * Created by xinszhou on 17/03/2017.
  */
 public class Notification implements Message {
-
     long msgId;
     long sid;
+    long destId;
     long proposedLeader;
     long epoch;
     QuorumPeer.ServerState state = QuorumPeer.ServerState.LOOKING;
     ZXID zxid;
 
-    public Notification(long msgId, long sid, long proposedLeader, long epoch, ZXID zxid) {
+    public Notification(long msgId, long sid, long destId, long proposedLeader, long epoch, ZXID zxid) {
+        this.destId = destId;
         this.msgId = msgId;
         this.sid = sid;
         this.proposedLeader = proposedLeader;
@@ -30,7 +31,7 @@ public class Notification implements Message {
 
     @Override
     public long getDestSid() {
-        return sid;
+        return destId;
     }
 
     public static long getSerialVersionUID() {
@@ -75,6 +76,10 @@ public class Notification implements Message {
 
     public void setState(QuorumPeer.ServerState state) {
         this.state = state;
+    }
+
+    public void setDestId(long destId) {
+        this.destId = destId;
     }
 
     public ZXID getZxid() {

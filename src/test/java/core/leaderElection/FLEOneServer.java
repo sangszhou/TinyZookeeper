@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
  * Created by xinszhou on 3/20/17.
  */
 @RunWith(JUnit4.class)
-public class FastLeaderElectionOneServerTest {
+public class FLEOneServer {
 
     // only server with port:7777 is available, other node are not online
     String oneServerConfig = "cluster {\n" +
@@ -31,7 +31,6 @@ public class FastLeaderElectionOneServerTest {
             "    nodes: [\"1:localhost:5555\", \"2:localhost:6666\", \"3:localhost:7777\"]\n" +
             "  }\n" +
             "}";
-
 
     LeaderElectionConfig leaderElectionConfig = new LeaderElectionConfig();
 
@@ -44,7 +43,6 @@ public class FastLeaderElectionOneServerTest {
     }
 
     FastLeaderElection fle, fle2;
-
 
     @Test
     public void startServer() throws Exception {
@@ -63,7 +61,6 @@ public class FastLeaderElectionOneServerTest {
         // start a client server and expecting notification
         fle.sendNotification();
 
-
         LeaderElectionConfig leaderElectionConfig2 = new LeaderElectionConfig();
         leaderElectionConfig2.setSelf(new Node("localhost", 6666, 2));
         QuorumCnxManager quorumCnxManager2 = new QuorumCnxManager(leaderElectionConfig2);
@@ -71,7 +68,7 @@ public class FastLeaderElectionOneServerTest {
 
         // fle2 has no notion of cluster, it only start a netty server
         fle2 = new FastLeaderElection(quorumCnxManager2, leaderElectionConfig2, p2);
-        new Thread(fle2, "fast leader election 2").start(); // start receive notification from other node
+        new Thread(fle2, "fast-leader-election-2").start(); // start receive notification from other node
         // fle should connect to fle2
         Notification n;
 

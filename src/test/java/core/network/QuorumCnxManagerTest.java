@@ -4,6 +4,7 @@ import core.network.client.RpcClientHandler;
 import core.network.config.LeaderElectionConfig;
 import core.network.config.Node;
 import core.network.protocol.Ack;
+import core.network.protocol.Message;
 import core.network.protocol.Notification;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,9 +35,10 @@ public class QuorumCnxManagerTest {
         leaderElectionConfig.setSelf(self);
         leaderElectionConfig.setClusterNodes(cluster);
         cnxMgr = new QuorumCnxManager(leaderElectionConfig);
-//        cnxMgr.init();
+        cnxMgr.init();
     }
 
+    // send message to quorum cnx manager
     @Test
     public void sendMsgToServer() throws Exception {
         cnxMgr.connectServer(1);
@@ -50,8 +52,13 @@ public class QuorumCnxManagerTest {
 
         handler.send(new Ack());
 
-        Thread.sleep(10000);
+        while (cnxMgr.recvMsg.peek() == null) {
+            Thread.sleep(5000);
+        }
 
+        Message recvMsg = cnxMgr.recvMsg.poll();
+        System.out.println("msg id: " + recvMsg.getMessageId());
+        System.out.println("dest id: " + recvMsg.getDestSid());
     }
 
 

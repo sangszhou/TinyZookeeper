@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+
+        <target>System.out</target>
+        <encoder>
+            <pattern>[%date{ISO8601}] %-5level[%X{sourceThread}] %logger{0} %class{0}.%method:%L - %msg%n</pattern>
+            <!--<pattern>[%date{ISO8601}] %-5level[%thread] [%X{sourceThread}] %logger{0} - %msg%n</pattern>-->
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+</configuration>

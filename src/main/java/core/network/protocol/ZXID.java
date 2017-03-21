@@ -6,9 +6,7 @@ import java.io.Serializable;
  * Created by xinszhou on 17/03/2017.
  */
 public class ZXID implements Serializable, Comparable<ZXID> {
-
     static final long serialVersionUID = 1L;
-
     long counter;
     long epoch;
 
@@ -41,7 +39,7 @@ public class ZXID implements Serializable, Comparable<ZXID> {
         return Math.toIntExact(counter - o.counter);
     }
 
-    public ZXID getNextZXID() {
-        return new ZXID(counter + 1, epoch);
-    }
+//    public ZXID getNextZXID() {
+//        return new ZXID(counter + 1, epoch);
+//    }
 }

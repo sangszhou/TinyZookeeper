@@ -35,20 +35,15 @@ public class RpcClientHandler extends SimpleChannelInboundHandler<Message> {
 
     public void send(Message message) {
         log.info("send message " + message.getMessageId() + " to dest " + message.getDestSid());
-        ChannelFuture wrote = channel.writeAndFlush(new Ack()).addListener(future -> {
+        ChannelFuture wrote = channel.writeAndFlush(message).addListener(future -> {
             future.getNow();
+            if (future.isSuccess()) {
+                log.info("write message success");
+            } else {
+                log.error("failed to send message to server", future.cause());
+            }
             log.info("send message returned");
         });
-
-        try {
-            wrote.sync();
-        } catch (Exception e) {
-        }
-        if(wrote.isSuccess()) {
-            log.info("write success");
-        } else {
-            System.out.println(wrote.cause());
-        }
     }
 
     // ideally, client won't receive any response, response alwasy received in server
@@ -66,6 +61,4 @@ public class RpcClientHandler extends SimpleChannelInboundHandler<Message> {
         throwable.printStackTrace();
         ctx.close();
     }
-
-
 }

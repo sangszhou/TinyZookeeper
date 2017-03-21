@@ -10,6 +10,7 @@ import core.network.protocol.Notification;
 import core.network.protocol.Vote;
 import core.network.protocol.ZXID;
 import core.quorum.QuorumPeer;
+import core.util.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import core.quorum.QuorumPeer.ServerState;
@@ -59,13 +60,13 @@ public class FastLeaderElection implements Runnable {
     public HashMap<Long, Vote> outofelecition = new HashMap<>();
 
     public FastLeaderElection(QuorumCnxManager cnxManager, LeaderElectionConfig config, QuorumPeer self) {
+        init();
         this.cnxManager = cnxManager;
         this.self = self;
         leaderElectionConfig = config;
-        init();
     }
 
-    public void init() {
+    private void init() {
         proposedEpoch = -1;
         proposedLeader = -1;
         proposedZxid = new ZXID(0, -1);
@@ -74,20 +75,28 @@ public class FastLeaderElection implements Runnable {
 
     // let other node knows
     public void sendNotification() throws Exception {
-        Notification notif = new Notification(msgId.getAndIncrement(), self.getMySid(), proposedLeader, logicalclock.get(), proposedZxid);
         // send notification to self
-        recvQueue.put(notif);
+        {
+            Notification notif = new Notification(msgId.getAndIncrement(), self.getMySid(), self.getMySid(), proposedLeader, logicalclock.get(), proposedZxid);
+            // send notification to self
+            recvQueue.put(notif);
+        }
 
         leaderElectionConfig.getAllSids().forEach(sid -> {
-            if (sid != leaderElectionConfig.getSelfInfo().getSid()) {
-                cnxManager.send(sid, notif);
+            if (sid != self.getMySid()) {
+                Notification notif2 = new Notification(msgId.getAndIncrement(), self.getMySid(), sid, proposedLeader, logicalclock.get(), proposedZxid);
+                try {
+                    log.info("send notification to sid: " + sid + ", notif: " + JSONUtils.toJson(notif2));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                cnxManager.send(sid, notif2);
             }
         });
     }
 
     // 注意，这里并不是 mysid 而是 proposed leader
     protected boolean totalOrderPredict(ZXID newZxid, long newId) {
-
         if (newZxid != proposedZxid) {
             if (newZxid.compareTo(proposedZxid) > 0) return true;
             return false;
@@ -146,9 +155,10 @@ public class FastLeaderElection implements Runnable {
 
         logicalclock.incrementAndGet();
         proposedLeader = self.getMySid();
-        proposedZxid = self.getMyLatestZxid();
+        proposedZxid = self.getLatestZxid();
 
-        log.info("start send notifications to other nodes");
+        log.info("start send notifications to other nodes: ");
+        sendNotification();
 
         while (self.getState() == QuorumPeer.ServerState.LOOKING) {
             // todo, set timeout
@@ -181,8 +191,8 @@ public class FastLeaderElection implements Runnable {
                         if (totalOrderPredict(newn.getZxid(), newn.getProposedLeader())) {
                             proposedLeader = newn.getProposedLeader();
                             proposedZxid = newn.getZxid();
+                            sendNotification();
                         }
-                        sendNotification();
                     }
 
                     recvVote.put(newn.getSid(), new Vote(newn.getSid(),

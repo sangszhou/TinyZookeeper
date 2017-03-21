@@ -24,10 +24,6 @@ public class QuorumPeer {
         return mySid;
     }
 
-    public ZXID getMyLatestZxid() {
-        return latestZxid;
-    }
-
     public void setMySid(long mySid) {
         this.mySid = mySid;
     }
@@ -43,6 +39,4 @@ public class QuorumPeer {
     public enum ServerState {
         LOOKING, FOLLOWING, LEADING, OBSERVING;
     }
-
-
 }

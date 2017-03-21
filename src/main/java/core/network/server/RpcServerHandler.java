@@ -26,14 +26,12 @@ public class RpcServerHandler extends SimpleChannelInboundHandler<Message> {
 
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
-        log.info("channel registered on server");
         ctx.fireChannelRegistered();
     }
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
         long msgId = msg.getMessageId();
-        System.out.println("message received on server");
         log.info("message received on server " + msg.getDestSid() +
                 " message id is " + msg.getMessageId());
         // thread safe?

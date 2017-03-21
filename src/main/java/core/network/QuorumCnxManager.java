@@ -3,8 +3,6 @@ package core.network;
 import com.google.common.annotations.VisibleForTesting;
 import core.network.config.LeaderElectionConfig;
 import core.network.protocol.Message;
-import core.network.protocol.Notification;
-import core.network.protocol.ZXID;
 import core.network.server.RpcServerHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
@@ -49,8 +47,7 @@ public class QuorumCnxManager {
     }
 
     public void init() throws Exception {
-//        leaderElectionConfig.load(GlobalConfig.getConfig);
-        initServer();
+        startServer();
         // wait how long?
         connectAllServers(leaderElectionConfig.getAllSids());
     }
@@ -159,7 +156,7 @@ public class QuorumCnxManager {
 
 
     // server establish
-    private void initServer() throws Exception {
+    private void startServer() throws Exception {
         RpcServerHandler serverHandler = new RpcServerHandler(recvMsg);
 
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
