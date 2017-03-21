@@ -37,4 +37,13 @@ public class Node {
     public void setSid(long sid) {
         this.sid = sid;
     }
+
+    @Override
+    public String toString() {
+        return "Node{" +
+                "host='" + host + '\'' +
+                ", port=" + port +
+                ", sid=" + sid +
+                '}';
+    }
 }

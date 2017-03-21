@@ -1,9 +1,17 @@
 package core.network;
 
+import core.network.client.RpcClientHandler;
+import core.network.config.LeaderElectionConfig;
+import core.network.config.Node;
+import core.network.protocol.Ack;
+import core.network.protocol.Notification;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -12,18 +20,38 @@ import static org.junit.Assert.*;
  */
 @RunWith(JUnit4.class)
 public class QuorumCnxManagerTest {
-    QuorumCnxManager cnxMgr = new QuorumCnxManager();
+
+    LeaderElectionConfig leaderElectionConfig;
+    QuorumCnxManager cnxMgr;
 
     @Before
-    public void init() throws Exception {
+    public void startServer() throws Exception {
         System.out.println("init");
-        cnxMgr.init();
+        leaderElectionConfig = new LeaderElectionConfig();
+        Node self = new Node("localhost", 5555, 1);
+        Map<Long, Node> cluster = new HashMap<>();
+        cluster.put(Long.parseLong("1"), self);
+        leaderElectionConfig.setSelf(self);
+        leaderElectionConfig.setClusterNodes(cluster);
+        cnxMgr = new QuorumCnxManager(leaderElectionConfig);
+//        cnxMgr.init();
     }
 
     @Test
-    public void test() throws Exception {
-        System.out.println("how");
-        Thread.sleep(3000090);
+    public void sendMsgToServer() throws Exception {
+        cnxMgr.connectServer(1);
+
+        while (cnxMgr.clientHandler.get(Long.parseLong("1")) == null) {
+            System.out.println("retry");
+            Thread.sleep(1000);
+        }
+
+        RpcClientHandler handler = cnxMgr.clientHandler.get(Long.parseLong("1"));
+
+        handler.send(new Ack());
+
+        Thread.sleep(10000);
+
     }
 
 

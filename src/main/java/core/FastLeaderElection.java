@@ -1,5 +1,6 @@
 package core;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.sun.corba.se.spi.activation.Server;
 import core.network.QuorumCnxManager;
 import core.network.config.LeaderElectionConfig;
@@ -46,16 +47,22 @@ public class FastLeaderElection implements Runnable {
     // configuration read from configurtion file
     LeaderElectionConfig leaderElectionConfig;
 
-    //    LinkedBlockingQueue<>
-    LinkedBlockingQueue<Notification> recvQueue = new LinkedBlockingQueue<>();
+    @VisibleForTesting
+    public LinkedBlockingQueue<Notification> recvQueue = new LinkedBlockingQueue<>();
 
-    HashMap<Long, Vote> recvVote = new HashMap<>();
+    @VisibleForTesting
+    public HashMap<Long, Vote> recvVote = new HashMap<>();
     // 当 peer 已经处于 looking 或者 leading 状态下后，新来的动作
-    HashMap<Long, Vote> outofelecition = new HashMap<>();
 
-    public FastLeaderElection(QuorumCnxManager cnxManager, LeaderElectionConfig config) {
+
+    @VisibleForTesting
+    public HashMap<Long, Vote> outofelecition = new HashMap<>();
+
+    public FastLeaderElection(QuorumCnxManager cnxManager, LeaderElectionConfig config, QuorumPeer self) {
         this.cnxManager = cnxManager;
+        this.self = self;
         leaderElectionConfig = config;
+        init();
     }
 
     public void init() {
@@ -67,15 +74,13 @@ public class FastLeaderElection implements Runnable {
 
     // let other node knows
     public void sendNotification() throws Exception {
+        Notification notif = new Notification(msgId.getAndIncrement(), self.getMySid(), proposedLeader, logicalclock.get(), proposedZxid);
+        // send notification to self
+        recvQueue.put(notif);
+
         leaderElectionConfig.getAllSids().forEach(sid -> {
             if (sid != leaderElectionConfig.getSelfInfo().getSid()) {
-                Message notif = new Notification(msgId.getAndIncrement(), self.getMySid(),
-                        proposedLeader, logicalclock.get(), proposedZxid);
-                try {
-                    cnxManager.send(sid, notif);
-                } catch (Exception e) {
-                    log.error("failed to send msg to sid: " + sid + ", from sid " + leaderElectionConfig.getSelfInfo().getSid(), e);
-                }
+                cnxManager.send(sid, notif);
             }
         });
     }
@@ -122,6 +127,7 @@ public class FastLeaderElection implements Runnable {
                 }
 
                 if (newRecvMsg instanceof Notification) {
+                    log.info("receive notification from server, add it to queue");
                     recvQueue.offer((Notification) newRecvMsg);
                 } else {
                     log.info("recv msg is not type of notification: " + newRecvMsg.getClass().getName());

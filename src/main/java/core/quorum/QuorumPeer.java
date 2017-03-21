@@ -10,7 +10,6 @@ public class QuorumPeer {
     long mySid;
     ZXID latestZxid;
 
-
     ServerState state = ServerState.LOOKING;
 
     public ServerState getState() {
@@ -29,6 +28,17 @@ public class QuorumPeer {
         return latestZxid;
     }
 
+    public void setMySid(long mySid) {
+        this.mySid = mySid;
+    }
+
+    public ZXID getLatestZxid() {
+        return latestZxid;
+    }
+
+    public void setLatestZxid(ZXID latestZxid) {
+        this.latestZxid = latestZxid;
+    }
 
     public enum ServerState {
         LOOKING, FOLLOWING, LEADING, OBSERVING;

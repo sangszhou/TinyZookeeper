@@ -1,7 +1,9 @@
 package core.network.client;
 
+import core.network.protocol.Ack;
 import core.network.protocol.Message;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.slf4j.Logger;
@@ -33,7 +35,20 @@ public class RpcClientHandler extends SimpleChannelInboundHandler<Message> {
 
     public void send(Message message) {
         log.info("send message " + message.getMessageId() + " to dest " + message.getDestSid());
-        channel.writeAndFlush(message);
+        ChannelFuture wrote = channel.writeAndFlush(new Ack()).addListener(future -> {
+            future.getNow();
+            log.info("send message returned");
+        });
+
+        try {
+            wrote.sync();
+        } catch (Exception e) {
+        }
+        if(wrote.isSuccess()) {
+            log.info("write success");
+        } else {
+            System.out.println(wrote.cause());
+        }
     }
 
     // ideally, client won't receive any response, response alwasy received in server
@@ -41,12 +56,13 @@ public class RpcClientHandler extends SimpleChannelInboundHandler<Message> {
     protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
         long msgId = msg.getMessageId();
         log.info("message received on server " + msg.getDestSid() + " message id is " + msg.getMessageId());
+        log.error("client handler should not receive message");
         recvMessage.add(msg);
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable throwable) {
-        log.info("Client caught exception");
+        log.info("client caught exception");
         throwable.printStackTrace();
         ctx.close();
     }

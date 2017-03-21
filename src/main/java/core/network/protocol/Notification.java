@@ -8,14 +8,11 @@ import io.netty.handler.codec.MessageToByteEncoder;
  */
 public class Notification implements Message {
 
-    static final long serialVersionUID = 1L;
-
     long msgId;
     long sid;
     long proposedLeader;
     long epoch;
-    QuorumPeer.ServerState state;
-
+    QuorumPeer.ServerState state = QuorumPeer.ServerState.LOOKING;
     ZXID zxid;
 
     public Notification(long msgId, long sid, long proposedLeader, long epoch, ZXID zxid) {
