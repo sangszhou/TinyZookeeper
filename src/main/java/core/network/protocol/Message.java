@@ -13,4 +13,6 @@ public interface Message extends Serializable {
 
     long getDestSid();
 
+    long getFromSid();
+
 }

@@ -1,5 +1,7 @@
 package core.quorum;
 
+import core.network.config.LeaderElectionConfig;
+import core.network.protocol.Vote;
 import core.network.protocol.ZXID;
 
 /**
@@ -9,6 +11,25 @@ public class QuorumPeer {
 
     long mySid;
     ZXID latestZxid;
+    LeaderElectionConfig leaderElectionConfig;
+
+    public LeaderElectionConfig getLeaderElectionConfig() {
+        return leaderElectionConfig;
+    }
+
+    public void setLeaderElectionConfig(LeaderElectionConfig leaderElectionConfig) {
+        this.leaderElectionConfig = leaderElectionConfig;
+    }
+
+    public Vote getCurrentVote() {
+        return currentVote;
+    }
+
+    public void setCurrentVote(Vote currentVote) {
+        this.currentVote = currentVote;
+    }
+
+    Vote currentVote;
 
     ServerState state = ServerState.LOOKING;
 

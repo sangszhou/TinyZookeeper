@@ -34,6 +34,11 @@ public class Notification implements Message {
         return destId;
     }
 
+    @Override
+    public long getFromSid() {
+        return sid;
+    }
+
     public static long getSerialVersionUID() {
         return serialVersionUID;
     }

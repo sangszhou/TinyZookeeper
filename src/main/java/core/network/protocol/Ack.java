@@ -15,5 +15,10 @@ public class Ack implements Message {
         return 0;
     }
 
+    @Override
+    public long getFromSid() {
+        return 0;
+    }
+
 
 }
